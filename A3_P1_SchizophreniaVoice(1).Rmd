@@ -191,59 +191,59 @@ write.csv (d_out, file = "Pitch_Out_Data.csv")
 pitch<-read.csv("final_rqa.csv",header = T) #better use this one...
 
 #mean of the pitch
-pitchmean <- lmer(mean ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE)
+pitchmean <- lmer(mean ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE)
 summary(pitchmean)
 
 #standard deviation of the pitch
-pitchsd<- lmer(stdDev ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE)
+pitchsd<- lmer(stdDev ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE)
 summary(pitchsd)
 
 #range of the pitch
-pitchrange<-lmer(range ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE)
+pitchrange<-lmer(range ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE)
 summary(pitchrange)
 
 #median of the pitch
-pitchmedian<-lmer(median ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE)
+pitchmedian<-lmer(median ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE)
 summary(pitchmedian)
 
 #IQR - interquartile range, a measure of variability, shows where middle 50% of the data is
-pitchiqr<-lmer(InterquartileRange ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE)
+pitchiqr<-lmer(InterquartileRange ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE)
 summary(pitchiqr)
 
 #Mean Absolute Deviation - the average distance between each data value and the mean
-pitchmad<-lmer(MeanAbsoluteDeviation ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE)
+pitchmad<-lmer(MeanAbsoluteDeviation ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE)
 summary(pitchmad)
 
 #Coefficient of variation - the ratio of the standard deviation to the mean (average)
-pitchcov<-lmer(coefficientOfVariation ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE)
+pitchcov<-lmer(coefficientOfVariation ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE)
 summary(pitchcov)
 
 #radius
-pitchradius<-lmer(radius ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE)
+pitchradius<-lmer(radius ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE)
 summary(pitchradius)
 
 #RR or rqa_REC - recurrence rate, high rr- lots of similar values in the timeseries, low rr - the timeseries contains many different values
-pitchRR <- lmer(rqa_REC ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
+pitchRR <- lmer(rqa_REC ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
 summary(pitchRR)
 
 #DET - determinism, High DET: when the system recurs, it tends to do that for at least two states in phase space. Lowe DET: when the system recurs, it tends to do that for only 1 state
-pitchdet<-lmer(rqa_DET ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
+pitchdet<-lmer(rqa_DET ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
 summary(pitchdet)
 
 #rqa_maxL -max diagonal line length. High MaxL: highly stable system: the system can repeat a very long sequence without being perturbed; Low MaxL: highly unstable system: the system tends to be perturbed 
-pitchmaxl<-lmer(rqa_maxL ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
+pitchmaxl<-lmer(rqa_maxL ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
 summary(pitchmaxl)
 
 #rqa_ENTR - entropy; High Entropy: the system recurs in many different ways: sometimes short sequences, sometimes long sequences. Low Entropy: the system recurs in stereotyped ways: always the same length
-pitchentr<-lmer(rqa_ENTR ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
+pitchentr<-lmer(rqa_ENTR ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
 summary(pitchentr)
 
 #rqa_TT -trapping time; High TT: when recurring a state the system tends to be trapped into it, repeating it again and again for long periods •Low TT: the system tends not to repeat the same state
-pitchtt<- lmer(rqa_TT ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
+pitchtt<- lmer(rqa_TT ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
 summary(pitchtt)
 
 #rqa_LAM - laminarity; High LAM: sequences tend to be composed of the same state repeated over and over •Low LAM: sequences if present (cf. DET) tend to be composed of different states
-pitchlam<-lmer(rqa_LAM ~ diagnosis+trial+study+(1+trial|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
+pitchlam<-lmer(rqa_LAM ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
 summary(pitchlam)
 
 #run models for the rest of acoustic features
