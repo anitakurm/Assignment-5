@@ -1,0 +1,207 @@
+---
+title: "Assignment2_Part1_VoiceInSchizophrenia"
+author: "Riccardo Fusaroli"
+date: "July 17, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Assignment 2 - Part 1 - Assessing voice in schizophrenia
+
+Schizophrenia has been associated with "inappropriate" voice, sometimes monotone, sometimes croaky. A few studies indicate that pitch might be an index of schizophrenia. However, an ongoing meta-analysis of the literature (which you will have a go at in the last assignment) indicates that pitch mean and standard deviation are only weak indicators of diagnosis. Can we do better with our new fancy complex skills?
+
+The corpus you are asked to analyse is a set of voice recordings from people with schizophrenia (just after first diagnosis) and 1-1 matched controls (on gender, age, education). Each participant watched 10 videos of triangles moving across the screen and had to describe them (so you have circa 10 recordings per person). I have already extracted the pitch once every 10 milliseconds and you will have to use this data to assess differences in the voice.
+
+N.B. Question to be answered via email to Celine: can you characterize voice in schizophrenia as acoustically different? Report the methods you used to answer this question and the results from the analyses. Add a couple of lines trying to interpret the results (make sense of the difference). E.g. People with schizophrenia tend to have high-pitched voice, and present bigger swings in their prosody than controls. Add a couple of lines describing limitations of the data/analyses if any is relevant.
+
+N.B. There are looots of files to be dealt with. Probably too many for your computer. This is a challenge for you. Some (complementary) possible strategies: You can select a subset of files only (and you have to justify your choice). You can learn how to use the apply() or map() functions. You can coordinate with classmates.
+
+1. In the course of this assignment you have to first select one datafile and figure out how to:
+
+- Extract "standard" descriptors of pitch: Mean, standard deviation, range
+- Extract less "standard" descriptors of pitch you can think of (e.g. median, iqr, mean absoluted deviation, coefficient of variation)
+- Extract "complex" descriptors: recurrence quantification analysis
+
+```{r}
+#setwd
+setwd("C:/Users/Samsung/Desktop/expmeth/Assignment-5")
+
+#libraries
+library(ggplot2)
+library(plyr)
+library(dplyr)
+library(lme4)
+library(MuMIn)
+library(modelr)
+library(stringr)
+library(tidyverse)
+library(Metrics)
+library(caret)
+library(pastecs)
+library(nonlinearTseries)
+library(crqa)
+
+d_demo = read.table("DemoData.txt", header = T)
+d_art = read.table("Articulation.txt", header = T, sep = ",")
+
+#the first datafile (let's take number 9)
+d1 <- read.table("Pitch/Study1D0S101T9_f0.txt", header = T)
+
+#Notes:
+#Control is 0
+
+#Standard descrptions of pitch first
+mean1 <- mean(d1$f0)          
+sd1 <- sd(d1$f0)            
+range1 <- max(d1$f0)-min(d1$f0) 
+
+#Less standard descriptions
+median1 <- median(d1$f0) #median
+iqr1 <- IQR(d1$f0) #it's 25.7925
+mad1<- mad(d1$f0)  #mean absoluted deviation
+coefvar1 <-sd(d1$f0)/ mean(d1$f0)
+
+#Complex descriptions
+#rqa10 <- rqa(time.series=d10$time, embedding.dim=2, time.lag=1,radius=1.2,lmin=2,do.plot=FALSE,distanceToBorder=2)
+#plot(rqa10)
+
+#Get optimal parameters
+par = list(lgM =  50, steps = seq(1, 6, 1),  radiusspan = 100,  radiussample = 40, normalize = 0,  rescale = 0,  mindiagline = 2,  minvertline = 2,  tw = 0,  whiteline = FALSE,  recpt = FALSE,  fnnpercent = 10,  typeami = "mindip")
+ans = optimizeParam(d1, d1, par, min.rec= 3.5, max.rec= 4.5)
+
+#Run CRQA analysis
+crqa1=crqa (d1, d1, delay=ans$delay, embed=ans$emddim, radius=ans$radius, normalize=0, rescale=0, mindiagline = 2, minvertline = 2) 
+crqa1
+```
+
+
+2. Second you will have to turn the code into a function and loop through all the files (or even better use apply/sapply/lapply)
+- Remember to extract the relevant information from the file names (Participant, Diagnosis, Trial, Study)
+```{r}
+#Thanks Peter!
+#Get a list of all the files
+Files = list.files("Pitch/", ".txt")
+#Get a smaller list for experimentation
+Files_t = sample(Files, 50)
+
+#Make a list with the titles - later the values will be added here
+d_out = c("Subj", "Study", "Diagnosis", "Trial", "Mean", "Std", "Min", "Max", "Median", "IQR", "MeanAbDif", "CoefVar", "RR", "DET", "NRLINE", "maxL", "L", "ENTR", "LAM", "TT")
+
+#Define function for getting all those values
+get_data = function(x) {
+  ###Read file
+  #Put the path together with the filename
+  dest = paste("pitch/", x, sep="")
+  #Read it
+  d_t <- read.table(dest, header = T)
+  
+  ###Extract info from filename
+  #Subject ID is the characters 10-12
+  Subj = substr(x, 10, 12)
+  #Diagnosis is 8th character
+  Diagnosis = substr(x, 8, 8)
+  #Study is 6th character
+  Study = substr(x, 6, 6)
+  #Trial is 14th, and possibly 15th. 
+  Trial = substr(x, 14, 16)
+  #Remove all non-digits in case they were there
+  Trial = gsub("([0-9]+).*$", "\\1", Trial) #Remove all non-digits
+  
+  ###Get descriptive statistics
+  #Get the mean
+  mean_t = mean(d_t$f0)
+  #The standard deviation
+  std_t = sd(d_t$f0)
+  #The minimum value
+  min_t = range(d_t$f0)[1]
+  #The maximum value
+  max_t = range(d_t$f0)[2]
+  #The median
+  median_t = median(d_t$f0)
+  #The inter-quartile range
+  iqr_t = IQR(d_t$f0)
+  #The mean absoluted deviation
+  mad_t = mean(abs(d_t$f0-mean(d_t$f0)))
+  #And the coefficient of variation
+  cov_t = sd(d_t$f0) / mean(d_t$f0)
+  
+  ###Do crqa analysis
+  #Get optimal parameters
+  par = list(lgM =  50, steps = seq(1, 6, 1),  radiusspan = 100,  radiussample = 40, normalize = 0,  rescale = 0,  mindiagline = 2,  minvertline = 2,  tw = 0,  whiteline = FALSE,  recpt = FALSE,  fnnpercent = 10,  typeami = "mindip")
+  
+  ans = optimizeParam(d_t, d_t, par, min.rec= 3.5, max.rec= 4.5)
+  
+  #Run CRQA analysis
+  crqa_t = crqa (d_t, d_t, delay=ans$delay, embed=ans$emddim, radius=ans$radius, normalize=0, rescale=0, mindiagline = 2, minvertline = 2) 
+  
+  ###Create list of results
+  results = c(Subj, Study, Diagnosis, Trial, 
+              mean_t, std_t, min_t, max_t, median_t, iqr_t, mad_t, cov_t, 
+              crqa_t$RR, crqa_t$DET, crqa_t$NRLINE, crqa_t$maxL, crqa_t$L, crqa_t$ENTR, crqa_t$LAM, crqa_t$TT)
+  
+  #That list is the result of the function
+           return(results)
+           }
+
+
+#start iteration count
+n = 1
+#Go through all files
+for (i in Files_t){
+  #Apply the function, and add it to the list with the titles
+  d_out = rbind(d_out, try(get_data(i)))
+  
+  #Keep track of iterations
+  print(n)
+  n = n + 1
+}
+
+#Make the column names from the first row
+colnames(d_out) = d_out[1, ] 
+#Delete the now unnecessary first row
+d_out = d_out[-1, ]  
+#Make into a dataframe
+d_out = data.frame(d_out)
+
+#Remove the lines with errormessages
+d_out = d_out[!d_out$Subj==
+"Error in if (length(ts1) < embed * delay) { : argument har længden nul
+",]
+
+#Rename diagnosis
+library(plyr)
+d_out$Diagnosis = revalue(d_out$Diagnosis, c("0" = "control", "1" = "schizo"))
+
+#Write the datafile to csv
+write.csv (d_out, file = "Pitch_Out_Data.csv")
+```
+
+
+3. Make one model per acoustic feature and test whether you can observe significant difference due to Diagnosis. Tip: Which other fixed factors should you control for (that is, include in the model)? Which random ones?
+- Bonus points: cross-validate the model and report the betas and standard errors from all rounds to get an idea of how robust the estimates are. 
+3a. Is study a significant predictor in these models? What should you infer from this? Does study interact with diagnosis? What should you infer from this?
+```{r}
+#read the output datafile
+pitch<-read.csv("Pitch_Out_Data.csv", header = T)
+
+#RR
+pitchRR <- lmer(P_RR ~ Diagnosis + Trial + Study +(1|Subject), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
+summary(pitchRR)
+
+#run models for the rest of acoustic features
+```
+
+
+4. Bonus Question: Compare effect size of diagnosis across the different measures. Which measure seems most sensitive?
+- Tip: to compare across measures you need to put all of them on the same scale, that is, you need to "standardize" them (z-score)
+
+5. Bonus question. In the Clinical Info file you have additional information about the participants. Which additional parameters (e.g. age, gender) should we control for? Report the effects.
+
+6. Write a paragraph reporting methods and results
+
+[Next assignment: can we use these measures to build a tool that diagnoses people from voice only?]
+
+## N.B. Remember to save the acoustic features of voice in a separate file, so to be able to load them next time
