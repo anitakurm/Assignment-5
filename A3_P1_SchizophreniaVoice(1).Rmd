@@ -227,7 +227,7 @@ pitchRR <- lmer(rqa_REC ~ diagnosis+study+diagnosis*study+(1|participant), pitch
 summary(pitchRR)
 
 #DET - determinism, High DET: when the system recurs, it tends to do that for at least two states in phase space. Lowe DET: when the system recurs, it tends to do that for only 1 state
-pitchdet<-lmer(rqa_DET ~ diagnosis+trial+study+(1|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
+pitchdet<-lmer(rqa_DET ~ diagnosis+study+diagnosis*study+(1|participant), pitch, REML = FALSE) #check random effects, change fixed effects, etc...
 summary(pitchdet)
 
 #rqa_maxL -max diagonal line length. High MaxL: highly stable system: the system can repeat a very long sequence without being perturbed; Low MaxL: highly unstable system: the system tends to be perturbed 
